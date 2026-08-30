@@ -6,6 +6,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .token_manager import SifelyTokenManager
 from .sifely import setup_sifely_coordinator
+from .openapi_auth import is_sk_token, redact_secrets
 from .const import (
     DOMAIN,
     CONF_EMAIL,
@@ -25,7 +26,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Handle integration setup from config flow."""
-    _LOGGER.info("📦 Setting up Sifely Cloud with options: %s", entry.options)
+    _LOGGER.info("📦 Setting up Sifely Cloud")
 
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.info(STARTUP_MESSAGE)
@@ -39,7 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("❌ Missing required credentials in config entry.")
         return False
 
-    _LOGGER.info("🔐 Initializing Sifely token manager for client_id: %s", client_id)
+    _LOGGER.info(
+        "🔐 Initializing Sifely token manager for client_id: %s",
+        redact_secrets(client_id) if is_sk_token(client_id) else client_id,
+    )
 
     # Create and initialize token manager
     session = async_get_clientsession(hass)

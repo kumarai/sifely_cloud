@@ -1,6 +1,6 @@
 import logging
 import aiohttp
-import hashlib
+import json
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,7 +14,13 @@ from .const import (
     CONF_CLIENT_ID,
     CONF_APX_NUM_LOCKS,
     CONF_HISTORY_ENTRIES,
-    LOGIN_ENDPOINT,
+    TOKEN_ENDPOINT,
+)
+from .openapi_auth import (
+    extract_client_id,
+    md5_hex_password,
+    parse_login_payload,
+    redact_secrets,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,40 +40,62 @@ class SifelyCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             email = user_input[CONF_EMAIL]
             raw_password = user_input[CONF_PASSWORD]
-            md5_password = hashlib.md5(raw_password.encode()).hexdigest()
-            _LOGGER.debug("🔐 Attempting login with email: %s", email, " | MD5: %s", md5_password)
-            
-            # Attempt to fetch client_id from Sifely using username and password
+            md5_password = md5_hex_password(raw_password)
+
             try:
                 async with aiohttp.ClientSession() as session:
-                    data = {"username": email, "password": md5_password}
-                    header = {"Content-Type": "application/x-www-form-urlencoded"}
+                    payload = {"account": email, "password": md5_password}
+                    headers = {"Content-Type": "application/json"}
                     async with session.post(
-                        LOGIN_ENDPOINT,
-                        headers=header,
-                        data = data
+                        TOKEN_ENDPOINT,
+                        headers=headers,
+                        json=payload,
                     ) as response:
-                        _LOGGER.debug("Sifely login response: %s", response)
-                        if response.status == 500:
-                            errors["base"] = "bad_username"
-                            return await self._show_form(user_input, errors)
-                        elif response.status == 401:
+                        body = await response.text()
+                        if response.status == 401:
+                            _LOGGER.error(
+                                "Sifely Open API login 401: %s",
+                                redact_secrets(body[:200]),
+                            )
                             errors["base"] = "bad_password"
                             return await self._show_form(user_input, errors)
-                        elif response.status != 200:
+                        if response.status != 200:
+                            _LOGGER.error(
+                                "Sifely Open API login HTTP %s: %s",
+                                response.status,
+                                redact_secrets(body[:200]),
+                            )
                             errors["base"] = "unknown_error"
                             return await self._show_form(user_input, errors)
 
-                        data = await response.json()
-                        client_id = data["data"]["clientId"]
+                        try:
+                            resp_json = json.loads(body)
+                            data = parse_login_payload(resp_json)
+                        except Exception:
+                            _LOGGER.error(
+                                "Sifely Open API login parse error: %s",
+                                redact_secrets(body[:200]),
+                            )
+                            errors["base"] = "unknown_error"
+                            return await self._show_form(user_input, errors)
+
+                        client_id = extract_client_id(data)
+                        if not client_id:
+                            _LOGGER.error(
+                                "Sifely Open API login missing clientToken/clientId: %s",
+                                redact_secrets(body[:200]),
+                            )
+                            errors["base"] = "unknown_error"
+                            return await self._show_form(user_input, errors)
 
             except Exception as e:
-                _LOGGER.exception("Error during login request: %s", e)
-                _LOGGER.info("Possible cause: Need to create a new client_id. See Sifely Cloud documentation.")
+                _LOGGER.exception("Error during Open API login request: %s", e)
+                _LOGGER.info(
+                    "Possible cause: subscribe to the free Developer plan at https://connect.sifely.com"
+                )
                 errors["base"] = "connection_error"
                 return await self._show_form(user_input, errors)
 
-            # Store clientId in options
             return self.async_create_entry(
                 title=email,
                 data={},
@@ -112,7 +140,7 @@ class SifelyCloudOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None) -> FlowResult:
-        _LOGGER.debug("⚙️ OptionsFlow triggered with current options: %s", self.config_entry.options)
+        _LOGGER.debug("OptionsFlow triggered")
 
         def default(key, fallback=""):
             return self.config_entry.options.get(key, self.config_entry.data.get(key, fallback))

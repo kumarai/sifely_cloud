@@ -6,8 +6,8 @@ import os
 NAME = "Sifely Cloud"
 DOMAIN = "sifely_cloud"
 ENTITY_PREFIX = "sifely" # Prefix for entity names
-VERSION = "1.2.0"
-ISSUE_URL = "https://github.com/kenster1965/sifely_cloud/issues"
+VERSION = "1.3.0"
+ISSUE_URL = "https://github.com/kumarai/sifely_cloud/issues"
 
 CONF_EMAIL = "User_Email"
 CONF_PASSWORD = "User_Password"
@@ -28,8 +28,8 @@ TOKEN_401s_BEFORE_REAUTH = 5  # Number of 401 errors before re-authentication
 TOKEN_401s_BEFORE_ALERT = 10  # Number of 401 errors before alerting user
 
 
-# API endpoints
-API_BASE_URL = "https://app-smart-server.sifely.com"
+# API endpoints — Open API (cus-openapi). Legacy app-smart-server closed new users 2026-06-17.
+API_BASE_URL = "https://cus-openapi.sifely.com"
 LOGIN_ENDPOINT = f"{API_BASE_URL}/system/smart/loginByGuest"
 TOKEN_ENDPOINT = f"{API_BASE_URL}/system/smart/login"
 REFRESH_ENDPOINT = f"{API_BASE_URL}/system/smart/oauthToken"

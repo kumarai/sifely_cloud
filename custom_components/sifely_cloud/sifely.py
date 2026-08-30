@@ -18,6 +18,7 @@ from .const import (
     LOCK_HISTORY_ENDPOINT,
 )
 from .token_manager import SifelyTokenManager
+from .openapi_auth import authorization_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,16 +58,24 @@ class SifelyCoordinator(DataUpdateCoordinator):
             # update_interval is disabled; polling is done manually via async_track_time_interval
         )
 
+    def _authorization_header(self) -> str:
+        token = getattr(self.token_manager, "access_token", None) or self.access_token
+        self.access_token = token
+        return authorization_value(token)
+
+    def _api_headers(self) -> dict:
+        return {
+            "Authorization": self._authorization_header(),
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+
     async def _async_update_data(self):
         """Disabled auto-update mechanism (we handle it manually)."""
         return self.lock_list
 
     async def async_fetch_lock_list(self):
         """Get lock data from the Sifely API."""
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+        headers = self._api_headers()
         params = {
             "pageNo": 1,
             "pageSize": self.apx_locks,
@@ -104,10 +113,7 @@ class SifelyCoordinator(DataUpdateCoordinator):
         if not hasattr(self, "_consecutive_401s"):
             self._consecutive_401s = 0
 
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+        headers = self._api_headers()
 
         for lock in self.lock_list:
             lock_id = lock.get("lockId")
@@ -172,10 +178,7 @@ class SifelyCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("⏩ Skipping lock detail polling: lock list not available")
             return self.details_data
 
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+        headers = self._api_headers()
 
         for lock in self.lock_list:
             lock_id = lock.get("lockId")
@@ -226,10 +229,7 @@ class SifelyCoordinator(DataUpdateCoordinator):
         """Send a lock or unlock command to a specific lock."""
         endpoint = LOCK_ENDPOINT if lock else UNLOCK_ENDPOINT
         url = f"{endpoint}?lockId={lock_id}"
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+        headers = self._api_headers()
 
         for attempt in range(1, LOCK_REQUEST_RETRIES + 1):
             try:
@@ -254,10 +254,7 @@ class SifelyCoordinator(DataUpdateCoordinator):
 
     async def async_query_lock_history(self, lock_id: int) -> list:
         """Fetch lock history records for a given lock."""
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+        headers = self._api_headers()
 
         url = f"{LOCK_HISTORY_ENDPOINT}?lockId={lock_id}&pageNo=1&pageSize={HISTORY_DISPLAY_LIMIT}"
 

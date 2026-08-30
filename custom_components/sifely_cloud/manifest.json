@@ -1,15 +1,14 @@
 {
     "domain": "sifely_cloud",
     "name": "Sifely Cloud",
-    "version": "1.2.0",
-    "documentation": "https://github.com/kenster1965/sifely_cloud",
-    "issue_tracker": "https://github.com/Kenster1965/sifely_cloud/issues/new/choose",
+    "version": "1.3.0",
+    "documentation": "https://github.com/kumarai/sifely_cloud",
+    "issue_tracker": "https://github.com/kumarai/sifely_cloud/issues",
     "dependencies": [],
-    "codeowners": ["@kenster1965"],
+    "codeowners": ["@kumarai", "@kenster1965"],
     "config_flow": true,
     "iot_class": "cloud_polling",
     "integration_type": "hub",
-    "translations": ["en"],
     "requirements": [],
-    "diagnostics": ["config_entry"]
+    "loggers": ["custom_components.sifely_cloud"]
 }
