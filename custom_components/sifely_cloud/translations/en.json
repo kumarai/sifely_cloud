@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Configure Sifely Cloud",
-        "description": "Enter your Sifely credentials. If you need help with the configuration have a look here: https://github.com/kenster1965/sifely_cloud",
+        "description": "Enter the email and password for the Sifely app / lock-owner account. Subscribe to the free Developer plan at https://connect.sifely.com first. Docs: https://github.com/kumarai/sifely_cloud",
         "data": {
           "User_Email": "Email Address",
           "User_Password": "Password",
@@ -19,7 +19,7 @@
       "bad_username": "Invalid username. Please check your email address.",
       "bad_password": "Incorrect password. Please try again.",
       "unknown_error": "Login failed due to an unknown error.",
-      "connection_error": "Could not connect to Sifely server. Please try again.\n- Possible fix is to update your client_id at https://app-smart-manager.sifely.com/Login.html"
+      "connection_error": "Could not connect to Sifely Open API. Confirm the free Developer plan is active at https://connect.sifely.com and try again."
     },
     "abort": {
       "single_instance_allowed": "Only a single configuration of Sifely Cloud is allowed."

@@ -4,11 +4,21 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Ignore config/devices folder
-#config/devices/
+# Home Assistant runtime / local config (never commit)
+.storage/
+**/.storage/
+home-assistant.log*
+*.log
+*.log.*
 
 # Ignore secrets and sensitive files
 secrets.yaml
+**/secrets.yaml
+*.sk
+.env
+.env.*
+*.env
+!.env.example
 
 # Ignore history CSV files
 custom_components/sifely_cloud/history/*.csv
@@ -24,9 +34,6 @@ venv/
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db
-
-# Ignore logs
-*.log
 
 # Ignore backups or temp files
 *.bak

@@ -17,6 +17,7 @@ TO_REDACT = {
     "access_token",
     "login_token",
     "refresh_token",
+    "clientToken",
     "User_Email",
     "User_Password",
     "adminPwd",

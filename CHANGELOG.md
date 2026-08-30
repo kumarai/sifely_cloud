@@ -2,6 +2,19 @@
 
 Notable changes to this project documented here.
 ---
+## [1.3.0] - 2026-08-30
+### Changed
+- Migrated authentication and API calls to Sifely's Open API (`https://cus-openapi.sifely.com`).
+- Login now POSTs JSON `{"account", "password"}` (MD5 hex) to `/system/smart/login` and accepts both wrapped `code/data` and unwrapped `clientToken` bodies.
+- Open API `sk-` keys are sent as the raw `Authorization` value (no `Bearer` prefix). Legacy tokens still use `Bearer`.
+- Config flow no longer uses legacy `loginByGuest` / form-urlencoded against `app-smart-server.sifely.com`.
+- Domain remains `sifely_cloud` so existing Home Assistant entities keep working.
+
+### Notes
+- New Sifely accounts need the free Developer plan at https://connect.sifely.com.
+- This fork keeps Ken Jensen's MIT license and credit from [kenster1965/sifely_cloud](https://github.com/kenster1965/sifely_cloud).
+
+---
 ## [1.2.0] - 2025-09-18
 ### Bug Fix
 - Ticket #23 / Fails to connect to server if the client id hasn't been previously generated.  Updated error message and help files.
